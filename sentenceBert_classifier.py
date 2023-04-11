@@ -7,6 +7,10 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
 import torch
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
+
+
 print(torch.cuda.is_available())
 # Load the data
 df = pd.read_csv('comments.csv')
