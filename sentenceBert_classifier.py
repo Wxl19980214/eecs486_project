@@ -2,25 +2,67 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sentence_transformers import SentenceTransformer
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.model_selection import KFold
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
+import torch
+print(torch.cuda.is_available())
 # Load the data
 df = pd.read_csv('comments.csv')
+# iterate over the rows and change a variable
+for index, row in df.iterrows():
+    df.at[index,'Comments']=str(row["Comments"])
+model = SentenceTransformer('sentence-transformers/paraphrase-mpnet-base-v2',device="cuda")
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(df['Comments'], df['Score'], test_size=0.2, random_state=42)
+X=df["Comments"].values
+y=df["Score"].values
 
-# Apply Sentence-BERT to convert the comments into numerical embeddings
-model = SentenceTransformer('sentence-transformers/paraphrase-mpnet-base-v2')
-X_train_emb = model.encode(X_train)
-X_test_emb = model.encode(X_test)
+X_encoded=model.encode(X)
+print("checkpoint1")
+# Split the data into training and testing sets using 5-fold cross-validation
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+mse_list=[]
 
-# Train a logistic regression classifier on the embeddings
-clf = LogisticRegression(random_state=42)
-clf.fit(X_train_emb, y_train)
+#LinearRegression
+# for fold, (train_index, test_index) in enumerate(kf.split(X_encoded)):
+#     print(f'Fold {fold + 1}')
+#     X_train, X_test = X_encoded[train_index], X_encoded[test_index]
+#     y_train, y_test = y[train_index], y[test_index]
+#
+#     # Perform linear regression and evaluate the model using the training and testing sets
+#     model = LinearRegression()
+#     model.fit(X_train, y_train)
+#
+#     y_train_pred = model.predict(X_train)
+#     y_test_pred = model.predict(X_test)
+#     y_test_pred=np.clip(y_test_pred, a_min=None, a_max=5.0)
+#     print(f'Test MSE at iterartion {fold+1} : {mean_squared_error(y_test, y_test_pred)}')
+#
+#
+#     mse_list.append(mean_squared_error(y_test, y_test_pred))
 
-# Test the classifier on a new comment
-new_comment = 'This is a great product!'
-new_comment_emb = model.encode([new_comment])
-predicted_score = clf.predict(new_comment_emb)[0]
+#SVM
+for fold, (train_index, test_index) in enumerate(kf.split(X_encoded)):
+    print(f'Fold {fold + 1}')
+    X_train, X_test = X_encoded[train_index], X_encoded[test_index]
+    y_train, y_test = y[train_index], y[test_index]
 
-print(predicted_score)
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    model = SVR(kernel='linear')
+    model.fit(X_train, y_train)
+
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    y_test_pred=np.clip(y_test_pred, a_min=None, a_max=5.0)
+    print(f'Test MSE at iterartion {fold+1} : {mean_squared_error(y_test, y_test_pred)}')
+
+
+    mse_list.append(mean_squared_error(y_test, y_test_pred))
+
+
+mean_mse = np.mean(mse_list)
+print(f"Mean MSE across all train/test splits: {mean_mse:.4f}")
