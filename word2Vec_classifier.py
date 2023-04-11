@@ -41,7 +41,7 @@ def calculate_avg_vector(sentence):
         except KeyError:
             pass
     if len(vectors) == 0:
-        return np.zeros(100)
+        return np.zeros(300)
     else:
         return np.mean(vectors, axis=0)
 
@@ -57,6 +57,8 @@ for i in range(5):
 
     # Train a regression model
     regressor = LinearRegression()
+
+
     regressor.fit(X_train, y_train)
 
     # Test the model on the testing set
