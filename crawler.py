@@ -20,7 +20,7 @@ with open('comments.csv',"w", encoding="utf-8", newline="") as csvfile:
     csvwriter = csv.writer(csvfile)
     csvwriter.writerow(["Comments","Score","Difficulty","Attendance","Would Take Again"])
 
-    for i in range (10235,12000):
+    for i in range (10235,20000):
         print("Getting professor: " + str(i))
         url = base_url + str(i)
         response = requests.get(url, headers=headers)
