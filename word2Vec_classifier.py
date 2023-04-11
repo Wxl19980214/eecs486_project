@@ -12,7 +12,8 @@ data = pd.read_csv("comments.csv")
 # Tokenize the comments
 
 # no preprocessing
-comments = [comment.split() for comment in data["Comments"]]
+
+comments = [str(comment).split() for comment in data["Comments"]]
 
 # average length of comment: 40
 
@@ -27,7 +28,9 @@ parameters = {
 }
 
 # Train the Word2Vec model
-model = Word2Vec(sentences=comments, workers=4, **parameters)
+# model = Word2Vec(sentences=comments, workers=4, **parameters)
+# model.save("word2vec.model")
+
 
 # Define a function to calculate the average vector for a sentence
 def calculate_avg_vector(sentence):
@@ -49,6 +52,7 @@ y = data["Score"]
 # Split the data into training and testing sets
 mse_list = []
 for i in range(5):
+    print(i)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=i)
 
     # Train a regression model
