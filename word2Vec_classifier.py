@@ -30,7 +30,7 @@ parameters = {
 # Train the Word2Vec model
 # model = Word2Vec(sentences=comments, workers=4, **parameters)
 # model.save("word2vec.model")
-
+model=Word2Vec.load("word2vec.model")
 
 # Define a function to calculate the average vector for a sentence
 def calculate_avg_vector(sentence):
