@@ -10,14 +10,25 @@ from sklearn.preprocessing import StandardScaler
 
 
 # Load the data
-data = pd.read_csv("comments.csv")
+data = pd.read_csv("comments.csv",na_values=" NaN")
+for index, row in data.iterrows():
+    data.at[index,'Comments']=str(row["Comments"])
+    if(row["Attendance"]==" Mandatory"):
+        data.at[index,"Attendance"]=1
+    elif (row["Attendance"]==" Not Mandatory"):
+        data.at[index,"Attendance"]=-1
+    else:
+        data.at[index,"Attendance"]=0
+    if(row["Would Take Again"]==" Yes"):
+        data.at[index,"Would Take Again"]=1
+    elif (row["Would Take Again"]==" No"):
+        data.at[index,"Would Take Again"]=-1
+    else:
+        data.at[index,"Would Take Again"]=0
 
-# Tokenize the comments
-
-# no preprocessing
 comments = [str(comment).split() for comment in data["Comments"]]
 
-# average length of comment: 40
+
 
 # manually tuned parameters
 parameters = {
@@ -30,7 +41,7 @@ parameters = {
 
 # Train the Word2Vec model
 model = Word2Vec(sentences=comments, workers=4, **parameters)
-model.save("word2VecSVM.model")
+# model.save("word2VecSVM.model")
 
 # Define a function to calculate the average vector for a sentence
 def calculate_avg_vector(sentence):
@@ -46,11 +57,18 @@ def calculate_avg_vector(sentence):
         return np.mean(vectors, axis=0)
 
 # Calculate the average vector for each comment
-X = [calculate_avg_vector(comment) for comment in comments]
+attendance=data["Attendance"].values
+wouldTakeAgain=data["Would Take Again"].values
+X_encoded = [calculate_avg_vector(comment) for comment in comments]
+X_encoded = np.concatenate((X_encoded, attendance.reshape(-1, 1)), axis=1)
+X_encoded= np.concatenate((X_encoded, wouldTakeAgain.reshape(-1, 1)), axis=1)
+
 y = data["Score"]
 
 # Split the data into training and testing sets
 mse_list = []
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
+
 for i in range(5):
     print(i)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=i)
